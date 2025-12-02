@@ -1,4 +1,15 @@
 import { useState, useEffect } from 'react';
+import {
+  FileText,
+  Copy,
+  Share2,
+  CheckCircle2,
+  AlertCircle,
+  BarChart3,
+  Sparkles,
+  Download,
+  Send
+} from 'lucide-react';
 import { 
   markdownToLinkedIn, 
   getPlainText, 
@@ -6,16 +17,6 @@ import {
   getCharacterCount
 } from 'supernal-linkedin-formatter';
 import './App.css';
-
-// Initialize AdSense on component mount
-if (typeof window !== 'undefined') {
-  try {
-    // @ts-ignore
-    (window.adsbygoogle = window.adsbygoogle || []).push({});
-  } catch (e) {
-    console.error('AdSense error:', e);
-  }
-}
 
 const examples = {
   basic: `# Welcome to LinkedIn Formatter
@@ -46,7 +47,7 @@ const greeting = "Hello LinkedIn!";
 console.log(greeting);
 \`\`\``,
   
-  mixed: `# 🚀 Exciting News!
+  mixed: `# Exciting News!
 
 I'm thrilled to announce that **our product** just hit *1 million users*!
 
@@ -65,16 +66,16 @@ function App() {
   const [markdown, setMarkdown] = useState(examples.basic);
   const [formatted, setFormatted] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     const result = markdownToLinkedIn(markdown);
     setFormatted(result);
   }, [markdown]);
 
-  var accessibility = checkAccessibility(formatted);
-  var charCount = getCharacterCount(formatted);
+  const accessibility = checkAccessibility(formatted);
+  const charCount = getCharacterCount(formatted);
 
-  // Always append source URL for tracking (no opt-out in free version)
   const getTextWithAttribution = () => {
     if (!formatted) return '';
     
@@ -85,45 +86,48 @@ function App() {
     const attribution = `\n\n---\nFormatted with ${sourceUrl}`;
     return formatted + attribution;
   };
-  // Recalculate stats based on formatted text (WITHOUT attribution for accurate preview)
-  charCount = getCharacterCount(formatted);
-  accessibility = formatted ? checkAccessibility(formatted) : { hasUnicodeFormatting: false, unicodeCharCount: 0, plainTextLength: 0, unicodePercentage: 0, warnings: [] };
+
+  const showNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   const handleCopy = async () => {
     try {
-      const textToCopy = getTextWithAttribution(); // Add attribution when copying
+      const textToCopy = getTextWithAttribution();
       await navigator.clipboard.writeText(textToCopy);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
+      showNotification('Copied to clipboard!');
     } catch (err) {
-      alert('Failed to copy to clipboard');
+      showNotification('Failed to copy');
     }
   };
 
   const handleCopyPlain = async () => {
     try {
-      const textToCopy = getTextWithAttribution(); // Add attribution when copying
+      const textToCopy = getTextWithAttribution();
       const plain = getPlainText(textToCopy);
       await navigator.clipboard.writeText(plain);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
+      showNotification('Plain text copied!');
     } catch (err) {
-      alert('Failed to copy to clipboard');
+      showNotification('Failed to copy');
     }
   };
 
-  const handleOpenInLinkedIn = async () => {
-    try {
-      const textToShare = getTextWithAttribution(); // Add attribution when opening LinkedIn
-      const encodedText = encodeURIComponent(textToShare);
-      const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?text=${encodedText}`;
-      await navigator.clipboard.writeText(textToShare);
-      window.open(linkedInUrl, '_blank');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-    } catch (err) {
-      alert('Failed to open LinkedIn. Text copied to clipboard - please paste manually.');
-    }
+  const handleShare = (platform: 'linkedin' | 'twitter' | 'facebook') => {
+    const text = getTextWithAttribution();
+    const encodedText = encodeURIComponent(text);
+    const url = window.location.href;
+    
+    const urls = {
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?text=${encodedText}`,
+      twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${url}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`
+    };
+    
+    navigator.clipboard.writeText(text);
+    window.open(urls[platform], '_blank');
+    showNotification('Text copied! Opening ' + platform + '...');
   };
 
   const handleClear = () => {
@@ -135,31 +139,26 @@ function App() {
   };
 
   return (
-    <>
-      {/* Header with Branding */}
-      <div style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', padding: '1rem 0' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <div>
-            <h1 style={{ fontSize: '1.5rem', margin: 0 }}>LinkedIn Formatter</h1>
-            <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', color: '#6b7280' }}>
-              Powered by{' '}
-              <a href="https://supernal.ai" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 600 }}>
-                Supernal Intelligence
-              </a>
-            </p>
+    <div className="app">
+      {/* Header */}
+      <header className="header">
+        <div className="header-content">
+          <div className="brand">
+            <FileText className="brand-icon" size={32} />
+            <div>
+              <h1 className="brand-title">LinkedIn Formatter</h1>
+              <p className="brand-subtitle">Transform Markdown into beautiful LinkedIn posts</p>
+            </div>
           </div>
-          <a
-            href="https://supernal.ai/tools/linkedin-formatter"
-            className="button button-primary"
-            style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-          >
-            Ad-Free Version →
-          </a>
+          <div className="header-badge">
+            <Sparkles size={16} />
+            <span>Powered by Supernal Intelligence</span>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Top Ad Banner */}
-      <div style={{ maxWidth: '1200px', margin: '1rem auto', textAlign: 'center' }}>
+      {/* Top Ad */}
+      <div className="ad-container top-ad">
         <ins
           className="adsbygoogle"
           style={{ display: 'block' }}
@@ -169,19 +168,18 @@ function App() {
         />
       </div>
 
-      <div className="container">
-        <header>
-          <h1>✨ Markdown to LinkedIn Formatter</h1>
-          <p className="subtitle">
-            Convert your Markdown to LinkedIn-formatted text instantly. No storage, no tracking, just formatting.
-          </p>
-        </header>
-
-        <div className="editor-container">
+      {/* Main Container */}
+      <main className="main-container">
+        {/* Editor Grid */}
+        <div className="editor-grid">
+          {/* Input Panel */}
           <div className="panel">
             <div className="panel-header">
-              <h2 className="panel-title">📝 Markdown Input</h2>
-              <button className="button button-secondary" onClick={handleClear}>
+              <div className="panel-title">
+                <FileText size={20} />
+                <span>Markdown Input</span>
+              </div>
+              <button className="button button-ghost" onClick={handleClear}>
                 Clear
               </button>
             </div>
@@ -190,58 +188,101 @@ function App() {
               onChange={(e) => setMarkdown(e.target.value)}
               placeholder="Type or paste your Markdown here..."
               spellCheck={false}
+              className="editor-textarea"
             />
           </div>
 
+          {/* Output Panel */}
           <div className="panel">
             <div className="panel-header">
-              <h2 className="panel-title">✨ LinkedIn Output</h2>
+              <div className="panel-title">
+                <Sparkles size={20} />
+                <span>LinkedIn Output</span>
+              </div>
             </div>
-            <div className="output">{formatted || 'Your formatted text will appear here...'}</div>
+            <div className="editor-output">
+              {formatted || 'Your formatted text will appear here...'}
+            </div>
           </div>
         </div>
 
-        <div className="action-buttons">
-          <button className="button button-primary" onClick={handleOpenInLinkedIn} title="Copy and open LinkedIn">
-            🚀 Open in LinkedIn
+        {/* Action Buttons */}
+        <div className="actions">
+          <button className="button button-primary" onClick={() => handleShare('linkedin')}>
+            <Send size={18} />
+            <span>Post to LinkedIn</span>
           </button>
-          <button className="button button-primary" onClick={handleCopy}>
-            📋 Copy Formatted
+          <button className="button button-secondary" onClick={handleCopy}>
+            <Copy size={18} />
+            <span>Copy Formatted</span>
           </button>
           <button className="button button-secondary" onClick={handleCopyPlain}>
-            📄 Copy Plain Text
+            <Download size={18} />
+            <span>Copy Plain Text</span>
+          </button>
+          <button className="button button-ghost" onClick={() => handleShare('twitter')}>
+            <Share2 size={18} />
+            <span>Share</span>
           </button>
         </div>
 
-        <div className="stats">
+        {/* Stats Cards */}
+        <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-label">Total Characters</div>
-            <div className={`stat-value ${charCount.exceedsLimit ? 'warning' : ''}`}>
-              {charCount.total}
+            <div className="stat-icon">
+              <BarChart3 size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">Total Characters</div>
+              <div className={`stat-value ${charCount.exceedsLimit ? 'warning' : ''}`}>
+                {charCount.total.toLocaleString()}
+              </div>
             </div>
           </div>
+
           <div className="stat-card">
-            <div className="stat-label">Remaining (LinkedIn Limit)</div>
-            <div className={`stat-value ${charCount.remaining < 0 ? 'warning' : 'success'}`}>
-              {charCount.remaining}
+            <div className="stat-icon success">
+              <CheckCircle2 size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">Remaining (3,000 limit)</div>
+              <div className={`stat-value ${charCount.remaining < 0 ? 'warning' : 'success'}`}>
+                {charCount.remaining.toLocaleString()}
+              </div>
             </div>
           </div>
+
           <div className="stat-card">
-            <div className="stat-label">Unicode Characters</div>
-            <div className="stat-value">{charCount.unicode}</div>
+            <div className="stat-icon">
+              <Sparkles size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">Unicode Characters</div>
+              <div className="stat-value">{charCount.unicode.toLocaleString()}</div>
+            </div>
           </div>
+
           <div className="stat-card">
-            <div className="stat-label">Unicode %</div>
-            <div className="stat-value">
-              {accessibility.unicodePercentage.toFixed(1)}%
+            <div className="stat-icon">
+              <BarChart3 size={20} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-label">Unicode Percentage</div>
+              <div className="stat-value">
+                {accessibility.unicodePercentage.toFixed(1)}%
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Warnings */}
         {accessibility.warnings.length > 0 && (
           <div className="warnings">
-            <div className="warnings-title">⚠️ Accessibility Warnings</div>
-            <ul>
+            <div className="warnings-header">
+              <AlertCircle size={20} />
+              <span>Accessibility Warnings</span>
+            </div>
+            <ul className="warnings-list">
               {accessibility.warnings.map((warning: string, i: number) => (
                 <li key={i}>{warning}</li>
               ))}
@@ -249,26 +290,31 @@ function App() {
           </div>
         )}
 
+        {/* Examples */}
         <div className="examples">
-          <h3 className="examples-title">📚 Try Examples</h3>
-          <div className="example-buttons">
-            <button className="example-button" onClick={() => loadExample('basic')}>
-              Basic Formatting
+          <h3 className="examples-title">Try Examples</h3>
+          <div className="examples-grid">
+            <button className="example-card" onClick={() => loadExample('basic')}>
+              <FileText size={20} />
+              <span>Basic Formatting</span>
             </button>
-            <button className="example-button" onClick={() => loadExample('lists')}>
-              Lists
+            <button className="example-card" onClick={() => loadExample('lists')}>
+              <BarChart3 size={20} />
+              <span>Lists</span>
             </button>
-            <button className="example-button" onClick={() => loadExample('code')}>
-              Code Blocks
+            <button className="example-card" onClick={() => loadExample('code')}>
+              <FileText size={20} />
+              <span>Code Blocks</span>
             </button>
-            <button className="example-button" onClick={() => loadExample('mixed')}>
-              Mixed Content
+            <button className="example-card" onClick={() => loadExample('mixed')}>
+              <Sparkles size={20} />
+              <span>Mixed Content</span>
             </button>
           </div>
         </div>
 
-        {/* Bottom Ad Banner */}
-        <div style={{ margin: '2rem 0', textAlign: 'center' }}>
+        {/* Bottom Ad */}
+        <div className="ad-container bottom-ad">
           <ins
             className="adsbygoogle"
             style={{ display: 'block' }}
@@ -278,8 +324,9 @@ function App() {
           />
         </div>
 
-        <footer>
-          <p>
+        {/* Footer */}
+        <footer className="footer">
+          <p className="footer-description">
             <strong>How it works:</strong> This tool converts Markdown syntax to Unicode Mathematical 
             Alphanumeric Symbols that look like formatted text on LinkedIn. No data is stored or sent 
             to any server—everything happens in your browser.
@@ -297,19 +344,23 @@ function App() {
               NPM Package
             </a>
             <span className="divider">•</span>
-            <span className="privacy-badge">🔒 Privacy First</span>
+            <span className="privacy-badge">
+              <CheckCircle2 size={16} />
+              Privacy First
+            </span>
           </div>
         </footer>
-      </div>
+      </main>
 
+      {/* Toast Notification */}
       {showToast && (
         <div className="toast">
-          ✅ Opening LinkedIn with your formatted text!
+          <CheckCircle2 size={20} />
+          <span>{toastMessage}</span>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
 export default App;
-
