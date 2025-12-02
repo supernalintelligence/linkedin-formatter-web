@@ -1,10 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "corepack enable && corepack prepare pnpm@9.12.3 --activate && pnpm install",
-  "devCommand": "pnpm dev",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
   "git": {
     "deploymentEnabled": true
   },
