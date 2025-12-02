@@ -3,7 +3,7 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "pnpm install",
+  "installCommand": "corepack enable && corepack prepare pnpm@9.12.3 --activate && pnpm install",
   "devCommand": "pnpm dev",
   "git": {
     "deploymentEnabled": true
