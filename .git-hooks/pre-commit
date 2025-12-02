@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Pre-commit hook for linkedin-formatter-web
+# Ensures TypeScript builds cleanly before committing
+
+set -e
+
+echo "🔒 Pre-commit: Checking linkedin-formatter-web..."
+
+# Change to the app directory
+cd "$(git rev-parse --show-toplevel)/families/supernal-social/apps/linkedin-formatter-web"
+
+# Check if package.json exists
+if [ ! -f "package.json" ]; then
+    echo "⚠️  Skipping: Not in linkedin-formatter-web directory"
+    exit 0
+fi
+
+# Run TypeScript check
+echo "📝 Running TypeScript check..."
+if ! pnpm exec tsc --noEmit; then
+    echo "❌ TypeScript errors found. Please fix before committing."
+    exit 1
+fi
+
+echo "✅ TypeScript check passed!"
+
+# Optional: Run build to ensure it compiles
+echo "🔨 Running build check..."
+if ! pnpm build; then
+    echo "❌ Build failed. Please fix before committing."
+    exit 1
+fi
+
+echo "✅ Build check passed!"
+
+exit 0
+
